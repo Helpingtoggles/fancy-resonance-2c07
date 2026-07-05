@@ -1,0 +1,819 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title="Options Day Trading Playbook"
+			description="A US options day-trading playbook for the Fidelity platform, built around a rapid-reassessment loop: find candidates, size the risk, and re-evaluate every open trade on a fixed clock."
+		/>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Options Day Trading Playbook</h1>
+			<p class="subtitle">
+				Finding intraday options opportunities in US markets, executing them on Fidelity, and —
+				the core of this design — <strong>reassessing every open trade on a fixed, rapid clock</strong>.
+			</p>
+
+			<aside class="disclaimer">
+				<strong>Educational tool only — not financial advice.</strong> Options day trading carries a
+				high risk of rapid loss, including the entire premium paid (and more on short options).
+				Most retail day traders lose money. Nothing here is a recommendation to buy or sell any
+				security. Verify all platform details and margin rules directly with Fidelity before trading.
+			</aside>
+
+			<nav class="toc" aria-label="Sections">
+				<a href="#find">1. Finding opportunities</a>
+				<a href="#scorecard">2. Candidate scorecard</a>
+				<a href="#practices">3. Best practices</a>
+				<a href="#fidelity">4. On Fidelity</a>
+				<a href="#cockpit">5. Reassessment cockpit</a>
+			</nav>
+
+			<!-- ============================================================ -->
+			<section id="find">
+				<h2>1. Where intraday options opportunities come from</h2>
+				<p>
+					Day-tradeable options opportunities are not stock picks — they are <em>liquidity plus a
+					catalyst plus a defined level</em>. If any of the three is missing, there is no trade.
+				</p>
+
+				<h3>Hunt only in deep liquidity</h3>
+				<ul>
+					<li>
+						<strong>Index products first:</strong> SPY, QQQ, and SPX carry the deepest options
+						liquidity in the world. SPY near-the-money strikes routinely trade with $0.01 wide
+						bid/ask spreads, and same-day (0DTE) expirations exist every trading day. SPX is
+						cash-settled with no assignment risk and Section 1256 (60/40) tax treatment, but
+						strikes are ~$5 apart and contracts are ~10x SPY's size.
+					</li>
+					<li>
+						<strong>Liquid single names second:</strong> mega-caps with penny-increment options and
+						heavy volume (e.g., NVDA, TSLA, AAPL, AMZN, META, AMD). Demand tens of thousands of
+						contracts of daily volume on the strikes you would actually trade.
+					</li>
+					<li>
+						<strong>Hard filters:</strong> bid/ask spread ≤ ~1–2% of the option's mid price; open
+						interest and same-day volume both in the thousands at your strike; underlying average
+						daily stock volume in the tens of millions. Wide spreads silently tax every entry
+						<em>and</em> every rapid exit — and this playbook exits a lot.
+					</li>
+				</ul>
+
+				<h3>Catalysts that create the day's movers</h3>
+				<ul>
+					<li><strong>Earnings reactions</strong> — trade the post-report session's range, not the overnight lottery.</li>
+					<li><strong>Scheduled macro events</strong> — CPI, FOMC, jobs report: index options move most on these days.</li>
+					<li><strong>News / upgrades / guidance</strong> — fresh, dated catalysts with pre-market volume behind them.</li>
+					<li><strong>Unusual relative volume</strong> — a stock trading multiples of its normal pre-market volume with a gap.</li>
+				</ul>
+
+				<h3>Setups with a defined level (so the stop is objective)</h3>
+				<ul>
+					<li>
+						<strong>Opening range breakout (ORB):</strong> mark the first 5–15 minutes' high/low;
+						trade the break with the range's other side as the invalidation level.
+					</li>
+					<li>
+						<strong>VWAP reclaim / rejection:</strong> price reclaiming VWAP from below (long bias)
+						or failing at VWAP from above (short bias); VWAP itself is the line in the sand.
+					</li>
+					<li>
+						<strong>Gap-and-go / gap-fade:</strong> continuation through pre-market high, or fade of
+						an over-extended gap back toward the fill — only with relative volume behind it.
+					</li>
+					<li>
+						<strong>Level-to-level moves:</strong> prior day high/low, pre-market high/low,
+						round numbers on indices. Enter at one level, exit into the next; no level, no trade.
+					</li>
+				</ul>
+
+				<h3>Contract selection for intraday holds</h3>
+				<ul>
+					<li>
+						<strong>Delta 0.40–0.60 (near the money):</strong> enough directional response without
+						pure theta lottery tickets. Deep OTM contracts need outsized moves to overcome decay.
+					</li>
+					<li>
+						<strong>Expiration:</strong> 0–5 DTE gives maximum gamma (fast gains <em>and</em> fast
+						losses). Same-day expiration decays measurably per hour — time stops are mandatory.
+					</li>
+					<li>
+						<strong>Mind implied volatility:</strong> buying options minutes before a known event
+						pays peak IV that collapses after the event (IV crush). Buying <em>after</em> the event
+						resolves is usually cheaper per unit of movement.
+					</li>
+				</ul>
+			</section>
+
+			<!-- ============================================================ -->
+			<section id="scorecard">
+				<h2>2. Candidate scorecard</h2>
+				<p>
+					Score a ticker before risking anything. Seven checks, pass/fail. <strong>6+ is
+					tradeable; below that, skip it</strong> — the next candidate is always free.
+				</p>
+				<div class="card" id="scorecard-card">
+					<input type="text" id="sc-ticker" placeholder="Ticker (e.g., SPY)" maxlength="8" autocomplete="off" />
+					<label><input type="checkbox" class="sc" /> Bid/ask spread ≤ 1–2% of option mid at my strike</label>
+					<label><input type="checkbox" class="sc" /> 1,000+ contracts of volume today at/near my strike</label>
+					<label><input type="checkbox" class="sc" /> Fresh, dated catalyst (earnings, macro print, news)</label>
+					<label><input type="checkbox" class="sc" /> Relative volume elevated vs. a normal session</label>
+					<label><input type="checkbox" class="sc" /> Defined level for entry AND invalidation (stop)</label>
+					<label><input type="checkbox" class="sc" /> Target is at least 2x the distance to my stop</label>
+					<label><input type="checkbox" class="sc" /> Not buying peak IV right before a known event</label>
+					<div class="score-row">
+						<span id="sc-score" class="score">0 / 7</span>
+						<span id="sc-verdict" class="verdict verdict-skip">SKIP</span>
+					</div>
+				</div>
+			</section>
+
+			<!-- ============================================================ -->
+			<section id="practices">
+				<h2>3. Best practices (US, 2026)</h2>
+
+				<h3>Risk rules that keep you in the game</h3>
+				<ul>
+					<li><strong>Risk 1–2% of account equity per trade</strong> — the premium you can lose to the stop, not the whole position notional.</li>
+					<li><strong>Cap total simultaneous short-dated exposure at ~5%</strong> of the account, no matter how many positions.</li>
+					<li><strong>Daily loss limit ~3%:</strong> hit it and you are done for the day — no revenge trades. Decide this number before the open.</li>
+					<li><strong>Time stops as well as price stops:</strong> with 0–5 DTE contracts, a trade that goes nowhere is losing to theta. If the move hasn't started within your window (commonly 15–30 minutes), exit.</li>
+					<li><strong>Plan the exit before entry:</strong> entry level, stop level, target, and time stop written down first — the reassessment cockpit below holds you to it.</li>
+					<li><strong>Journal every trade:</strong> setup, thesis, and each reassessment verdict. Review weekly; cut the setups that don't pay.</li>
+				</ul>
+
+				<h3>The regulatory ground shifted in June 2026</h3>
+				<ul>
+					<li>
+						The classic <strong>Pattern Day Trader rule is gone</strong>: the SEC approved FINRA's
+						amendment to Rule 4210, and effective <strong>June 4, 2026</strong> the 4-day-trades-in-5-days
+						designation and the $25,000 minimum equity requirement were eliminated, replaced by
+						<strong>intraday margin standards</strong> tied to your actual real-time exposure.
+					</li>
+					<li>
+						Brokers may phase in implementation until <strong>October 20, 2027</strong> — so check
+						Fidelity's current policy on your account rather than assuming the new regime applies.
+						In a <strong>cash account</strong>, day trading long options was never PDT-restricted, but
+						you can only reuse <em>settled</em> cash (options settle T+1); spending unsettled proceeds
+						risks a good-faith violation.
+					</li>
+					<li>
+						Margin freedom is not risk freedom: the new standards demand equity commensurate with
+						intraday exposure. Your sizing rules above should bind long before margin does.
+					</li>
+				</ul>
+
+				<h3>Process discipline</h3>
+				<ul>
+					<li><strong>Pre-market routine (before 9:30 ET):</strong> mark the calendar (macro prints, earnings), build a 2–5 name watchlist from gappers/news, pre-mark levels, pre-fill the scorecard.</li>
+					<li><strong>Trade the first 90 minutes and the last hour;</strong> midday liquidity and range typically dry up — that's when forced trades happen.</li>
+					<li><strong>Use limit orders at or near the mid.</strong> Market orders on options pay the spread twice. If the mid won't fill within a tick or two, the trade is telling you the liquidity isn't there.</li>
+					<li><strong>One setup at a time when starting out.</strong> Master ORB on SPY before adding names and setups.</li>
+				</ul>
+			</section>
+
+			<!-- ============================================================ -->
+			<section id="fidelity">
+				<h2>4. Running this on Fidelity</h2>
+				<p>
+					Fidelity's day-trading workhorse is <strong>Active Trader Pro</strong> (desktop) — free,
+					with streaming data; it's auto-granted at 36+ trades in a rolling 12 months and available
+					on request otherwise (Active Trader Services, 800-564-0211). Options commissions are
+					<strong>$0 + $0.65 per contract</strong>. You'll need options approval (Tier 1 covers
+					buying calls/puts; spreads need Tier 2 with margin).
+				</p>
+				<div class="table-wrap">
+					<table>
+						<thead>
+							<tr><th>Workflow step</th><th>Active Trader Pro tool</th></tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Find the day's movers</td>
+								<td>Market Movers & real-time screeners/filters (technical + social sentiment); pre-market gappers list</td>
+							</tr>
+							<tr>
+								<td>Check option liquidity</td>
+								<td>Option Chain with streaming bid/ask, volume, open interest, and Greeks per strike</td>
+							</tr>
+							<tr>
+								<td>Mark levels & watch the setup</td>
+								<td>Charts with VWAP, prior day high/low, and drawing tools (166 studies, 22 drawing tools); Real-Time Analytics alerts on level breaks</td>
+							</tr>
+							<tr>
+								<td>Enter with the exit attached</td>
+								<td>Directed trading & single/multi-leg option ticket; attach OTO/OCO brackets so the stop and target exist the moment you're filled</td>
+							</tr>
+							<tr>
+								<td>Rapid reassessment while in the trade</td>
+								<td><strong>Trade Armor®</strong> — live P/L on the chart with draggable stop/target orders, so each reassessment verdict becomes an order change in seconds</td>
+							</tr>
+							<tr>
+								<td>Scratch/exit fast</td>
+								<td>Multi-Trade ticket (up to 50 staged orders) and keyboard-fast order entry; position close from Trade Armor</td>
+							</tr>
+							<tr>
+								<td>Journal & review</td>
+								<td>Orders/History export plus your log from the cockpit below</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<p class="note">
+					Mobile app and Fidelity.com can trade options too, but for rapid reassessment you want
+					ATP's streaming quotes, Trade Armor, and pre-staged brackets. SPX index options and
+					standard equity options are both tradeable at Fidelity; futures are not offered.
+				</p>
+			</section>
+
+			<!-- ============================================================ -->
+			<section id="cockpit">
+				<h2>5. Rapid Reassessment Cockpit</h2>
+				<p>
+					The core design requirement: <strong>no open trade goes unexamined for more than a few
+					minutes.</strong> Arm a trade below and the cockpit forces a structured re-check on a
+					fixed interval (default every 3 minutes — right-sized for 0–5 DTE decay). Four questions,
+					one verdict: <strong>HOLD, TRIM, or EXIT</strong>. Every verdict is logged locally so the
+					journal writes itself.
+				</p>
+
+				<div class="card" id="arm-card">
+					<h3>Arm a trade</h3>
+					<div class="grid2">
+						<label>Ticker / contract
+							<input type="text" id="t-ticker" placeholder="SPY 07/05 $560C" autocomplete="off" />
+						</label>
+						<label>Direction
+							<select id="t-dir">
+								<option value="long-call">Long call</option>
+								<option value="long-put">Long put</option>
+								<option value="debit-spread">Debit spread</option>
+								<option value="credit-spread">Credit spread</option>
+							</select>
+						</label>
+						<label>Entry premium ($)
+							<input type="number" id="t-entry" step="0.01" min="0" placeholder="1.25" />
+						</label>
+						<label>Stop premium ($)
+							<input type="number" id="t-stop" step="0.01" min="0" placeholder="0.90" />
+						</label>
+						<label>Target premium ($)
+							<input type="number" id="t-target" step="0.01" min="0" placeholder="1.95" />
+						</label>
+						<label>Time stop (min in trade)
+							<input type="number" id="t-timestop" step="1" min="1" value="30" />
+						</label>
+						<label>Reassess every
+							<select id="t-interval">
+								<option value="60">1 min</option>
+								<option value="120">2 min</option>
+								<option value="180" selected>3 min</option>
+								<option value="300">5 min</option>
+							</select>
+						</label>
+						<label>Thesis (one line)
+							<input type="text" id="t-thesis" placeholder="ORB break of 15-min high w/ volume" autocomplete="off" />
+						</label>
+					</div>
+					<button id="arm-btn" class="btn btn-primary">Arm trade & start clock</button>
+					<p class="warn" id="arm-warn" hidden>Enter ticker, entry, and stop — and the stop must make sense for the direction.</p>
+				</div>
+
+				<div class="card cockpit" id="live-card" hidden>
+					<div class="cockpit-head">
+						<div>
+							<span class="live-ticker" id="live-ticker"></span>
+							<span class="live-meta" id="live-meta"></span>
+						</div>
+						<div class="timers">
+							<div class="timer-block">
+								<span class="timer-label">Next reassess</span>
+								<span class="timer" id="reassess-timer">--:--</span>
+							</div>
+							<div class="timer-block">
+								<span class="timer-label">Time in trade</span>
+								<span class="timer" id="trade-timer">--:--</span>
+							</div>
+						</div>
+					</div>
+					<p class="live-thesis" id="live-thesis"></p>
+
+					<div id="reassess-panel" hidden>
+						<h3 class="flash">⏱ Reassess now</h3>
+						<div class="q">
+							<span>1. Is the entry thesis still intact?</span>
+							<div class="opts" data-q="thesis">
+								<button data-v="yes" class="btn">Yes</button>
+								<button data-v="no" class="btn">No — invalidated</button>
+							</div>
+						</div>
+						<div class="q">
+							<span>2. Where is the premium vs. plan?</span>
+							<div class="opts" data-q="price">
+								<button data-v="target" class="btn">At/past target</button>
+								<button data-v="working" class="btn">Between stop & target</button>
+								<button data-v="stop" class="btn">At/through stop</button>
+							</div>
+						</div>
+						<div class="q">
+							<span>3. Has the move actually progressed since the last check?</span>
+							<div class="opts" data-q="progress">
+								<button data-v="yes" class="btn">Yes</button>
+								<button data-v="no" class="btn">No — stalling</button>
+							</div>
+						</div>
+						<div class="q">
+							<span>4. Is the spread still tight enough to exit cleanly?</span>
+							<div class="opts" data-q="spread">
+								<button data-v="yes" class="btn">Yes</button>
+								<button data-v="no" class="btn">No — widening</button>
+							</div>
+						</div>
+						<div class="verdict-row" id="verdict-row" hidden>
+							<span class="verdict" id="verdict-badge"></span>
+							<span id="verdict-why"></span>
+						</div>
+						<div class="verdict-actions" id="verdict-actions" hidden>
+							<button id="log-hold" class="btn">Log & keep holding</button>
+							<button id="log-exit" class="btn btn-danger">I exited — close trade</button>
+						</div>
+					</div>
+
+					<div class="cockpit-foot">
+						<button id="early-reassess" class="btn">Reassess early</button>
+						<button id="close-trade" class="btn btn-danger">Close trade (exited)</button>
+					</div>
+				</div>
+
+				<div class="card" id="journal-card">
+					<h3>Session journal</h3>
+					<p class="note">Stored only in this browser (localStorage). Export before clearing.</p>
+					<ol id="journal" class="journal"></ol>
+					<div class="journal-actions">
+						<button id="export-journal" class="btn">Copy journal as JSON</button>
+						<button id="clear-journal" class="btn btn-danger">Clear journal</button>
+					</div>
+				</div>
+
+				<h3>How the verdict is decided</h3>
+				<ul>
+					<li><strong>EXIT</strong> — thesis invalidated, premium at/through the stop, or the time stop has expired while the trade stalls. No debate: the plan already decided.</li>
+					<li><strong>TRIM</strong> — at/past target (take at least half; trail the rest), or the move is stalling / the spread is widening while the thesis still holds.</li>
+					<li><strong>HOLD</strong> — thesis intact, premium between stop and target, move progressing, exit still clean. Do nothing until the next bell.</li>
+				</ul>
+			</section>
+
+			<Footer />
+		</main>
+
+		<style>
+			.subtitle {
+				font-size: 1.1em;
+				color: rgb(var(--gray));
+			}
+			.disclaimer {
+				border-left: 4px solid #b45309;
+				background: #fef3c7;
+				color: #78350f;
+				padding: 0.75em 1em;
+				border-radius: 0 8px 8px 0;
+				font-size: 0.85em;
+				line-height: 1.5;
+			}
+			.toc {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5em 1.25em;
+				margin: 1.5em 0 2em;
+				font-size: 0.9em;
+			}
+			section {
+				margin-top: 3em;
+			}
+			section h3 {
+				font-size: 1.3em;
+				margin-top: 1.25em;
+			}
+			.card {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				padding: 1.25em;
+				margin: 1.5em 0;
+				background: #fff;
+				box-shadow: 0 2px 6px rgba(var(--gray), 15%);
+			}
+			.card label {
+				display: block;
+				font-size: 0.85em;
+				margin: 0.5em 0;
+			}
+			.card input[type='text'],
+			.card input[type='number'],
+			.card select {
+				width: 100%;
+				box-sizing: border-box;
+				padding: 0.45em 0.6em;
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 6px;
+				font-size: 16px;
+				font-family: inherit;
+			}
+			#scorecard-card label {
+				display: flex;
+				gap: 0.6em;
+				align-items: baseline;
+				cursor: pointer;
+			}
+			#sc-ticker {
+				margin-bottom: 0.75em;
+				text-transform: uppercase;
+			}
+			.score-row {
+				display: flex;
+				align-items: center;
+				gap: 1em;
+				margin-top: 1em;
+				padding-top: 0.75em;
+				border-top: 1px solid rgb(var(--gray-light));
+			}
+			.score {
+				font-size: 1.4em;
+				font-weight: 700;
+			}
+			.verdict {
+				font-weight: 700;
+				padding: 0.15em 0.7em;
+				border-radius: 999px;
+				font-size: 0.85em;
+				letter-spacing: 0.05em;
+			}
+			.verdict-skip { background: #fee2e2; color: #991b1b; }
+			.verdict-trade { background: #dcfce7; color: #166534; }
+			.verdict-hold { background: #dcfce7; color: #166534; }
+			.verdict-trim { background: #fef3c7; color: #92400e; }
+			.verdict-exit { background: #fee2e2; color: #991b1b; }
+			.grid2 {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 0 1em;
+			}
+			@media (max-width: 600px) {
+				.grid2 { grid-template-columns: 1fr; }
+			}
+			.btn {
+				font-family: inherit;
+				font-size: 0.9em;
+				padding: 0.5em 1em;
+				border-radius: 8px;
+				border: 1px solid rgb(var(--gray-light));
+				background: #fff;
+				cursor: pointer;
+			}
+			.btn:hover { border-color: var(--accent); color: var(--accent); }
+			.btn-primary {
+				background: var(--accent);
+				border-color: var(--accent);
+				color: #fff;
+				margin-top: 0.75em;
+			}
+			.btn-primary:hover { background: var(--accent-dark); color: #fff; }
+			.btn-danger { border-color: #fca5a5; color: #991b1b; }
+			.btn-danger:hover { border-color: #991b1b; color: #991b1b; background: #fee2e2; }
+			.opts .btn.selected {
+				border-color: var(--accent);
+				background: var(--accent);
+				color: #fff;
+			}
+			.warn { color: #991b1b; font-size: 0.85em; }
+			.cockpit-head {
+				display: flex;
+				justify-content: space-between;
+				align-items: flex-start;
+				gap: 1em;
+				flex-wrap: wrap;
+			}
+			.live-ticker { font-weight: 700; font-size: 1.2em; display: block; }
+			.live-meta { font-size: 0.8em; color: rgb(var(--gray)); }
+			.timers { display: flex; gap: 1.5em; }
+			.timer-block { text-align: right; }
+			.timer-label {
+				display: block;
+				font-size: 0.7em;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				color: rgb(var(--gray));
+			}
+			.timer {
+				font-variant-numeric: tabular-nums;
+				font-size: 1.6em;
+				font-weight: 700;
+			}
+			.timer.due { color: #991b1b; }
+			.live-thesis {
+				font-style: italic;
+				font-size: 0.9em;
+				color: rgb(var(--gray));
+				margin: 0.5em 0 0;
+			}
+			#reassess-panel {
+				margin-top: 1em;
+				padding-top: 1em;
+				border-top: 2px solid var(--accent);
+			}
+			.flash { color: #991b1b; }
+			.q { margin: 0.9em 0; font-size: 0.9em; }
+			.q > span { display: block; margin-bottom: 0.35em; font-weight: 700; }
+			.opts { display: flex; gap: 0.5em; flex-wrap: wrap; }
+			.verdict-row {
+				display: flex;
+				align-items: center;
+				gap: 0.75em;
+				margin-top: 1.25em;
+				font-size: 0.9em;
+			}
+			.verdict-actions { display: flex; gap: 0.75em; margin-top: 0.75em; flex-wrap: wrap; }
+			.cockpit-foot {
+				display: flex;
+				gap: 0.75em;
+				margin-top: 1.25em;
+				padding-top: 1em;
+				border-top: 1px solid rgb(var(--gray-light));
+				flex-wrap: wrap;
+			}
+			.journal {
+				font-size: 0.82em;
+				padding-left: 1.25em;
+				max-height: 320px;
+				overflow-y: auto;
+			}
+			.journal li { margin-bottom: 0.4em; }
+			.journal .jv { font-weight: 700; }
+			.journal .jv-HOLD { color: #166534; }
+			.journal .jv-TRIM { color: #92400e; }
+			.journal .jv-EXIT, .journal .jv-CLOSED { color: #991b1b; }
+			.journal-actions { display: flex; gap: 0.75em; flex-wrap: wrap; }
+			.table-wrap { overflow-x: auto; }
+			table { border-collapse: collapse; font-size: 0.85em; }
+			th, td {
+				text-align: left;
+				padding: 0.5em 0.75em;
+				border-bottom: 1px solid rgb(var(--gray-light));
+				vertical-align: top;
+			}
+			th { color: rgb(var(--black)); }
+			.note { font-size: 0.82em; color: rgb(var(--gray)); }
+		</style>
+
+		<script>
+			// ---------- Candidate scorecard ----------
+			const scBoxes = Array.from(document.querySelectorAll<HTMLInputElement>('#scorecard-card .sc'));
+			const scScore = document.getElementById('sc-score')!;
+			const scVerdict = document.getElementById('sc-verdict')!;
+			function updateScore() {
+				const n = scBoxes.filter((b) => b.checked).length;
+				scScore.textContent = `${n} / ${scBoxes.length}`;
+				const ok = n >= 6;
+				scVerdict.textContent = ok ? 'TRADEABLE' : 'SKIP';
+				scVerdict.className = `verdict ${ok ? 'verdict-trade' : 'verdict-skip'}`;
+			}
+			scBoxes.forEach((b) => b.addEventListener('change', updateScore));
+
+			// ---------- Rapid reassessment cockpit ----------
+			type Trade = {
+				ticker: string;
+				dir: string;
+				entry: number;
+				stop: number;
+				target: number | null;
+				timeStopMin: number;
+				intervalSec: number;
+				thesis: string;
+				startedAt: number;
+			};
+			type Answers = { thesis?: string; price?: string; progress?: string; spread?: string };
+
+			const $ = (id: string) => document.getElementById(id)!;
+			const armCard = $('arm-card');
+			const liveCard = $('live-card');
+			const reassessPanel = $('reassess-panel');
+			const verdictRow = $('verdict-row');
+			const verdictActions = $('verdict-actions');
+			const reassessTimerEl = $('reassess-timer');
+			const tradeTimerEl = $('trade-timer');
+
+			let trade: Trade | null = null;
+			let nextReassessAt = 0;
+			let tick: ReturnType<typeof setInterval> | null = null;
+			let answers: Answers = {};
+			let reassessOpen = false;
+
+			const JOURNAL_KEY = 'dt-playbook-journal-v1';
+			function loadJournal(): any[] {
+				try {
+					return JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]');
+				} catch {
+					return [];
+				}
+			}
+			function saveJournal(entries: any[]) {
+				localStorage.setItem(JOURNAL_KEY, JSON.stringify(entries));
+			}
+			function renderJournal() {
+				const list = $('journal');
+				const entries = loadJournal();
+				list.innerHTML = '';
+				for (const e of entries.slice().reverse()) {
+					const li = document.createElement('li');
+					const time = new Date(e.at).toLocaleTimeString();
+					const badge = document.createElement('span');
+					badge.className = `jv jv-${e.verdict}`;
+					badge.textContent = e.verdict;
+					li.append(`${time} — ${e.ticker} — `);
+					li.append(badge);
+					if (e.why) li.append(` — ${e.why}`);
+					list.append(li);
+				}
+			}
+			function logEntry(verdict: string, why: string) {
+				if (!trade) return;
+				const entries = loadJournal();
+				entries.push({
+					at: Date.now(),
+					ticker: trade.ticker,
+					dir: trade.dir,
+					entry: trade.entry,
+					stop: trade.stop,
+					target: trade.target,
+					thesis: trade.thesis,
+					minutesInTrade: Math.round((Date.now() - trade.startedAt) / 60000),
+					verdict,
+					why,
+					answers: { ...answers },
+				});
+				saveJournal(entries);
+				renderJournal();
+			}
+
+			function fmt(sec: number) {
+				const s = Math.max(0, Math.floor(sec));
+				return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+			}
+
+			function startClock() {
+				if (tick) clearInterval(tick);
+				tick = setInterval(() => {
+					if (!trade) return;
+					tradeTimerEl.textContent = fmt((Date.now() - trade.startedAt) / 1000);
+					const remain = (nextReassessAt - Date.now()) / 1000;
+					reassessTimerEl.textContent = reassessOpen ? 'NOW' : fmt(remain);
+					reassessTimerEl.classList.toggle('due', reassessOpen || remain <= 10);
+					if (!reassessOpen && remain <= 0) openReassess();
+				}, 250);
+			}
+
+			function openReassess() {
+				reassessOpen = true;
+				answers = {};
+				reassessPanel.hidden = false;
+				verdictRow.hidden = true;
+				verdictActions.hidden = true;
+				document
+					.querySelectorAll('#reassess-panel .opts .btn')
+					.forEach((b) => b.classList.remove('selected'));
+				// Audible-ish attention cue without audio: flash the title.
+				document.title = '⏱ REASSESS — Options Playbook';
+			}
+
+			function closeReassess() {
+				reassessOpen = false;
+				reassessPanel.hidden = true;
+				if (trade) nextReassessAt = Date.now() + trade.intervalSec * 1000;
+				document.title = 'Options Day Trading Playbook';
+			}
+
+			function computeVerdict(): { v: string; why: string } {
+				const minsIn = trade ? (Date.now() - trade.startedAt) / 60000 : 0;
+				const pastTimeStop = trade ? minsIn >= trade.timeStopMin : false;
+				if (answers.price === 'stop') return { v: 'EXIT', why: 'Premium at/through the stop — the plan already decided.' };
+				if (answers.thesis === 'no') return { v: 'EXIT', why: 'Thesis invalidated — being in the trade no longer has a reason.' };
+				if (pastTimeStop && answers.price !== 'target')
+					return { v: 'EXIT', why: `Time stop (${trade!.timeStopMin} min) expired without reaching target — theta is now the counterparty.` };
+				if (answers.price === 'target') return { v: 'TRIM', why: 'At/past target — take at least half, trail the rest.' };
+				if (answers.progress === 'no' || answers.spread === 'no')
+					return { v: 'TRIM', why: 'Move stalling or exit liquidity worsening — reduce while the exit is still clean.' };
+				return { v: 'HOLD', why: 'Thesis intact, price working, exit clean. Do nothing until the next bell.' };
+			}
+
+			function maybeShowVerdict() {
+				if (!answers.thesis || !answers.price || !answers.progress || !answers.spread) return;
+				const { v, why } = computeVerdict();
+				const badge = $('verdict-badge');
+				badge.textContent = v;
+				badge.className = `verdict verdict-${v.toLowerCase()}`;
+				$('verdict-why').textContent = why;
+				verdictRow.hidden = false;
+				verdictActions.hidden = false;
+				(verdictActions as any).dataset.verdict = v;
+				(verdictActions as any).dataset.why = why;
+			}
+
+			document.querySelectorAll<HTMLElement>('#reassess-panel .opts').forEach((group) => {
+				group.addEventListener('click', (ev) => {
+					const btn = (ev.target as HTMLElement).closest('button');
+					if (!btn) return;
+					group.querySelectorAll('.btn').forEach((b) => b.classList.remove('selected'));
+					btn.classList.add('selected');
+					(answers as any)[group.dataset.q!] = btn.dataset.v;
+					maybeShowVerdict();
+				});
+			});
+
+			$('arm-btn').addEventListener('click', () => {
+				const ticker = ($('t-ticker') as HTMLInputElement).value.trim().toUpperCase();
+				const entry = parseFloat(($('t-entry') as HTMLInputElement).value);
+				const stop = parseFloat(($('t-stop') as HTMLInputElement).value);
+				const targetRaw = parseFloat(($('t-target') as HTMLInputElement).value);
+				const dir = ($('t-dir') as HTMLSelectElement).value;
+				const longPremium = dir !== 'credit-spread';
+				const stopSane = longPremium ? stop < entry : stop > entry;
+				if (!ticker || !isFinite(entry) || !isFinite(stop) || !stopSane) {
+					$('arm-warn').hidden = false;
+					return;
+				}
+				$('arm-warn').hidden = true;
+				trade = {
+					ticker,
+					dir,
+					entry,
+					stop,
+					target: isFinite(targetRaw) ? targetRaw : null,
+					timeStopMin: parseInt(($('t-timestop') as HTMLInputElement).value, 10) || 30,
+					intervalSec: parseInt(($('t-interval') as HTMLSelectElement).value, 10),
+					thesis: ($('t-thesis') as HTMLInputElement).value.trim(),
+					startedAt: Date.now(),
+				};
+				nextReassessAt = Date.now() + trade.intervalSec * 1000;
+				$('live-ticker').textContent = `${ticker} · ${dir.replace('-', ' ')}`;
+				$('live-meta').textContent =
+					`in @ $${entry.toFixed(2)} · stop $${stop.toFixed(2)}` +
+					(trade.target != null ? ` · target $${trade.target.toFixed(2)}` : '') +
+					` · time stop ${trade.timeStopMin}m`;
+				$('live-thesis').textContent = trade.thesis ? `Thesis: ${trade.thesis}` : '';
+				armCard.hidden = true;
+				liveCard.hidden = false;
+				closeReassess();
+				startClock();
+				logEntry('HOLD', 'Trade armed — clock started.');
+			});
+
+			$('early-reassess').addEventListener('click', () => {
+				if (!reassessOpen) openReassess();
+			});
+
+			$('log-hold').addEventListener('click', () => {
+				logEntry(
+					(verdictActions as any).dataset.verdict || 'HOLD',
+					(verdictActions as any).dataset.why || ''
+				);
+				closeReassess();
+			});
+
+			function endTrade(why: string) {
+				logEntry('CLOSED', why);
+				if (tick) clearInterval(tick);
+				trade = null;
+				liveCard.hidden = true;
+				armCard.hidden = false;
+				closeReassess();
+			}
+			$('log-exit').addEventListener('click', () => endTrade('Exited on reassessment verdict.'));
+			$('close-trade').addEventListener('click', () => endTrade('Trade closed manually.'));
+
+			$('export-journal').addEventListener('click', async () => {
+				const data = JSON.stringify(loadJournal(), null, 2);
+				try {
+					await navigator.clipboard.writeText(data);
+					$('export-journal').textContent = 'Copied ✓';
+				} catch {
+					window.prompt('Copy your journal JSON:', data);
+				}
+				setTimeout(() => ($('export-journal').textContent = 'Copy journal as JSON'), 1500);
+			});
+			$('clear-journal').addEventListener('click', () => {
+				if (window.confirm('Clear the local journal? Export first if you want to keep it.')) {
+					saveJournal([]);
+					renderJournal();
+				}
+			});
+
+			renderJournal();
+		</script>
+	</body>
+</html>
